@@ -1,1 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <title>Retro-Glitch Weather Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-pink: #FF10F0;
+            --neon-blue: #00F8FF;
+            --neon-green: #00FF9D;
+            --dark-bg: #10081C;
+            --mid-bg: #1A0D32;
+        }
+
+        body {
+            font-family: 'VT323', monospace;
+            background: radial-gradient(circle at center, var(--dark-bg) 0%, #08040C 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.5s ease;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: var(--mid-bg);
+            border: 2px solid var(--neon-blue);
+            border-image: linear-gradient(45deg, var(--neon-blue), var(--neon-pink)) 1;
+            box-shadow: 
+                0 0 10px var(--neon-blue),
+                0 0 20px var(--neon-blue),
+                0 0 30px var(--neon-blue),
+                0 0 40px var(--neon-pink) inset;
+            border-radius: 0;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Hover effect for the main cards */
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px var(--neon-pink),
+                0 0 25px var(--neon-pink),
+                0 0 35px var(--neon-pink),
+                0 0 45px var(--neon-pink) inset;
+        }
+        
+        /* New styling for a more prominent search card */
+        .search-card {
+            grid-column: 1 / -1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 10px;
+        }
+
+        .search-container input {
+            width: 70%;
+            padding: 10px 20px;
+            border: 2px solid var(--neon-green);
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--neon-green);
+            font-size: 1rem;
+            outline: none;
+            transition: transform 0.3s ease;
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        .search-container input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            border: 2px solid var(--neon-pink);
+            background: rgba(255, 0, 160, 0.4);
+            color: var(--neon-pink);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+
+        .search-container button:hover {
+            background: rgba(255, 0, 160, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .weather-result {
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+            padding: 20px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        
+        .weather-result.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .gemini-card {
+            grid-column: 1 / 2;
+            grid-row: 3 / 4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gemini-card button {
+            background: var(--mid-bg);
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .gemini-card button:hover {
+            background: rgba(0, 255, 157, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+        
+        .gemini-card button:active {
+            transform: scale(0.98);
+            background: rgba(0, 255, 157, 0.4);
+        }
+        
+        .search-container button:active {
+            transform: scale(0.98);
+            background: rgba(255, 0, 160, 0.6);
+        }
+
+        #gemini-output {
+            text-align: left;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--neon-blue);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            min-height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--neon-blue);
+        }
+        
+        .gemini-card #gemini-output {
+            height: auto;
+            min-height: 100px;
+        }
+
+        .forecast-card {
+            grid-column: 2 / 3;
+            grid-row: 2 / 4;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: flex-start;
+        }
+
+        .clock-card {
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+            padding: 20px 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        
+        .wind-card {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Card Content Styling */
+        .city-name, .time {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+        }
+
+        .current-weather {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .current-weather .icon {
+            width: 80px;
+            height: 80px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: drop-shadow(0 0 10px var(--neon-green));
+        }
+
+        .current-weather .temp-description {
+            text-align: left;
+        }
+
+        .current-weather .temperature {
+            font-size: clamp(3rem, 7vw, 5rem);
+        }
+
+        .current-weather .description {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            font-weight: 400;
+            text-transform: capitalize;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+            border-top: 2px dashed var(--neon-blue);
+            padding-top: 20px;
+        }
+
+        .detail-box .label {
+            font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+            color: var(--neon-blue);
+        }
+
+        .detail-box .value {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            font-weight: 500;
+        }
+
+        .forecast-card h3 {
+            margin-top: 0;
+            align-self: center;
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            font-weight: 700;
+            color: var(--neon-blue);
+            border-bottom: 2px solid var(--neon-pink);
+            padding-bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .forecast-list {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .forecast-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+            font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .forecast-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.02);
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+        
+        .forecast-item:active {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.01);
+        }
+
+        .forecast-item .forecast-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .forecast-item img {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 5px var(--neon-green));
+        }
+
+        .forecast-temp {
+            font-weight: 600;
+            color: var(--neon-pink);
+        }
+
+        .forecast-day {
+            color: var(--neon-blue);
+        }
+
+        .clock-card .time {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            animation: glitch 1.5s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 var(--neon-pink), -0.05em -0.025em 0 var(--neon-blue), -0.025em 0.05em 0 var(--neon-green); }
+            15% { text-shadow: none; }
+            16% { text-shadow: 0.05em 0 0 var(--neon-pink), -0.05em -0.025em 0 var(--neon-blue), -0.025em 0.05em 0 var(--neon-green); }
+            17% { text-shadow: none; }
+            20% { text-shadow: -0.05em 0.025em 0 var(--neon-green), 0.05em -0.05em 0 var(--neon-pink), 0.025em 0.05em 0 var(--neon-blue); }
+            22% { text-shadow: none; }
+            24% { text-shadow: -0.05em 0.025em 0 var(--neon-green), 0.05em -0.05em 0 var(--neon-pink), 0.025em 0.05em 0 var(--neon-blue); }
+            26% { text-shadow: none; }
+            60% { text-shadow: 0.05em -0.025em 0 var(--neon-blue), -0.05em 0 0 var(--neon-pink), 0.025em -0.05em 0 var(--neon-green); }
+            70% { text-shadow: none; }
+            71% { text-shadow: 0.05em -0.025em 0 var(--neon-blue), -0.05em 0 0 var(--neon-pink), 0.025em -0.05em 0 var(--neon-green); }
+            100% { text-shadow: none; }
+        }
+
+        .clock-card .date {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            color: var(--neon-green);
+        }
+        
+        .wind-card {
+            padding: 20px;
+        }
+        
+        .wind-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .gauge-container {
+            width: 150px;
+            height: 150px;
+            position: relative;
+        }
+
+        .gauge-dial {
+            width: 100%;
+            height: 100%;
+            border: 10px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 10px solid transparent;
+            border-right: 10px solid transparent;
+            transform: rotate(45deg);
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: inset 0 0 15px var(--neon-blue);
+        }
+
+        .gauge-dial::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .gauge-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 70px;
+            background: var(--neon-pink);
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(-45deg); /* Initial position */
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--neon-pink);
+        }
+        
+        #wind-value-display {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--neon-green);
+        }
+        
+        @media (max-width: 900px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                padding: 10px;
+            }
+
+            .search-card, .weather-result, .forecast-card, .clock-card, .gemini-card, .wind-card {
+                grid-column: 1 / -1;
+                grid-row: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <div class="card search-card">
+            <div class="search-container">
+                <input type="text" id="city-input" placeholder="ENTER CITY NAME">
+                <button id="search-button">SEARCH</button>
+            </div>
+        </div>
+
+        <div class="card weather-result" id="weather-result">
+            <div class="current-weather">
+                <div class="icon"></div>
+                <div class="temp-description">
+                    <div class="city-name"></div>
+                    <div class="temperature"></div>
+                    <div class="description"></div>
+                </div>
+            </div>
+            
+            <div class="details">
+                <div class="detail-box">
+                    <div class="label">HUMIDITY</div>
+                    <div class="value humidity-value"></div>
+                </div>
+                <div class="detail-box">
+                    <div class="label">WIND SPEED</div>
+                    <div class="value wind-speed-value"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card clock-card">
+            <div class="time" id="time-display"></div>
+            <div class="date" id="date-display"></div>
+            <div class="battery-wifi">
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+        
+        <div class="card wind-card">
+            <h3>WIND SPEED</h3>
+            <div class="gauge-container">
+                <div class="gauge-dial"></div>
+                <div class="gauge-needle" id="wind-needle"></div>
+            </div>
+            <div id="wind-value-display"></div>
+        </div>
+
+        <div class="card forecast-card">
+            <h3>5 DAY FORECAST</h3>
+            <div class="forecast-list">
+                <!-- Forecast items will be injected here by JavaScript -->
+            </div>
+        </div>
+
+        <div class="card gemini-card">
+            <h3>WEATHER INSIGHTS</h3>
+            <button id="generate-advice-button" disabled>GENERATE INSIGHTS ✨</button>
+            <div id="gemini-output">
+                SEARCH FOR A CITY TO GET WEATHER INSIGHTS.
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // Replace 'YOUR_API_KEY' with your actual OpenWeatherMap API key
+        const API_KEY = 'c1a88ee6c38ec544c180e86cac271bc6';
+        
+        // Gemini API Key (leave this as an empty string)
+        const GEMINI_API_KEY = "";
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + GEMINI_API_KEY;
+
+        const cityInput = document.getElementById('city-input');
+        const searchButton = document.getElementById('search-button');
+        const cityNameEl = document.querySelector('.city-name');
+        const tempEl = document.querySelector('.temperature');
+        const descriptionEl = document.querySelector('.description');
+        const humidityEl = document.querySelector('.humidity-value');
+        const windSpeedEl = document.querySelector('.wind-speed-value');
+        const currentIconEl = document.querySelector('.current-weather .icon');
+        const weatherResultContainer = document.getElementById('weather-result');
+        const forecastContainer = document.querySelector('.forecast-list');
+        const timeEl = document.getElementById('time-display');
+        const dateEl = document.getElementById('date-display');
+        const windNeedle = document.getElementById('wind-needle');
+        const windValueDisplay = document.getElementById('wind-value-display');
+        const generateAdviceButton = document.getElementById('generate-advice-button');
+        const geminiOutputEl = document.getElementById('gemini-output');
+        
+        let lastWeatherData = null;
+        let lastForecastData = null;
+
+        searchButton.addEventListener('click', () => {
+            const city = cityInput.value.trim();
+            if (city) {
+                getWeatherData(city);
+            } else {
+                // Use a modal-like UI instead of alert()
+                geminiOutputEl.textContent = 'PLEASE ENTER A CITY NAME.';
+                geminiOutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
+            }
+        });
+
+        cityInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        generateAdviceButton.addEventListener('click', () => {
+            if (lastWeatherData && lastForecastData) {
+                getGeminiAdvice(lastWeatherData, lastForecastData);
+            }
+        });
+
+        async function getWeatherData(city) {
+            const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`;
+
+            try {
+                const [weatherResponse, forecastResponse] = await Promise.all([
+                    fetch(currentWeatherUrl),
+                    fetch(forecastUrl)
+                ]);
+
+                if (!weatherResponse.ok || !forecastResponse.ok) {
+                    throw new Error('CITY NOT FOUND. PLEASE TRY AGAIN.');
+                }
+
+                const weatherData = await weatherResponse.json();
+                const forecastData = await forecastResponse.json();
+
+                lastWeatherData = weatherData; // Store the data for the Gemini API call
+                lastForecastData = forecastData;
+                updateCurrentWeather(weatherData);
+                updateForecast(forecastData);
+                updateWindGauge(weatherData.wind.speed);
+                
+                // Enable the Gemini advice button once data is loaded
+                generateAdviceButton.disabled = false;
+                geminiOutputEl.textContent = 'CLICK THE BUTTON TO GET WEATHER INSIGHTS.';
+
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                // Use a modal-like UI instead of alert()
+                geminiOutputEl.textContent = error.message;
+                geminiOutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
+                generateAdviceButton.disabled = true;
+                geminiOutputEl.textContent = 'COULD NOT GET WEATHER INSIGHTS.';
+            }
+        }
+        
+        async function getGeminiAdvice(weatherData, forecastData) {
+            geminiOutputEl.textContent = 'GENERATING INSIGHTS...';
+            geminiOutputEl.style.backgroundColor = '';
+            generateAdviceButton.disabled = true;
+
+            const city = weatherData.name;
+            const currentTemp = Math.round(weatherData.main.temp);
+            const currentDesc = weatherData.weather[0].description;
+            
+            // Extract a summary of the next 5 days
+            const dailySummaries = {};
+            forecastData.list.forEach(item => {
+                const date = new Date(item.dt * 1000);
+                const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+                if (!dailySummaries[day]) {
+                    dailySummaries[day] = {
+                        min: item.main.temp,
+                        max: item.main.temp,
+                        desc: item.weather[0].description,
+                    };
+                }
+                dailySummaries[day].min = Math.min(dailySummaries[day].min, item.main.temp_min);
+                dailySummaries[day].max = Math.max(dailySummaries[day].max, item.main.temp_max);
+            });
+
+            let forecastSummary = '';
+            Object.keys(dailySummaries).slice(0, 5).forEach(day => {
+                const summary = dailySummaries[day];
+                forecastSummary += `${day}: ${summary.desc} with temps from ${Math.round(summary.min)}°C to ${Math.round(summary.max)}°C. `;
+            });
+
+            // Craft the prompt for the LLM with more detailed information
+            const userPrompt = `Based on the following weather conditions: Current City: ${city}, Current Temp: ${currentTemp} C, Current Description: ${currentDesc}. Here is the 5-day forecast summary: ${forecastSummary}. Please provide a very stylized, one-paragraph summary of the weather for the week and suggest one or two unique activities. The tone should be retro-futuristic, like a corrupted AI broadcasting from a distant planet.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "You are a weather-predicting AI from the year 2077. Your data stream is slightly corrupted, and you communicate with a glitchy, neon-cyberpunk style. All output should be in ALL CAPS." }]
+                },
+            };
+
+            try {
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (generatedText) {
+                    geminiOutputEl.textContent = generatedText.toUpperCase();
+                } else {
+                    geminiOutputEl.textContent = 'FAILED TO GENERATE INSIGHTS. PLEASE TRY AGAIN.';
+                }
+
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                geminiOutputEl.textContent = 'ERROR GENERATING INSIGHTS.';
+            } finally {
+                generateAdviceButton.disabled = false;
+            }
+        }
+
+        function updateCurrentWeather(data) {
+            weatherResultContainer.classList.add('show');
+            cityNameEl.textContent = data.name.toUpperCase();
+            tempEl.textContent = `${Math.round(data.main.temp)}°C`;
+            descriptionEl.textContent = data.weather[0].description.toUpperCase();
+            humidityEl.textContent = `${data.main.humidity}%`;
+            
+            const windSpeedKmh = (data.wind.speed * 3.6).toFixed(1);
+            windSpeedEl.textContent = `${windSpeedKmh} KM/H`;
+            
+            const iconCode = data.weather[0].icon;
+            const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
+            currentIconEl.style.backgroundImage = `url(${iconUrl})`;
+        }
+
+        function updateForecast(data) {
+            forecastContainer.innerHTML = '';
+            
+            if (!data || !data.list || data.list.length === 0) {
+                const noDataMessage = document.createElement('div');
+                noDataMessage.textContent = "FORECAST DATA IS NOT AVAILABLE.";
+                noDataMessage.style.textAlign = "center";
+                noDataMessage.style.padding = "20px";
+                forecastContainer.appendChild(noDataMessage);
+                return;
+            }
+            
+            const dailyForecasts = {};
+            const today = new Date().toLocaleDateString();
+
+            data.list.forEach(item => {
+                const date = new Date(item.dt * 1000);
+                const day = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+                const dateKey = date.toLocaleDateString();
+
+                if (!dailyForecasts[dateKey]) {
+                    dailyForecasts[dateKey] = {
+                        day: day,
+                        min: item.main.temp,
+                        max: item.main.temp,
+                        desc: item.weather[0].description,
+                        iconCode: item.weather[0].icon
+                    };
+                }
+                dailyForecasts[dateKey].min = Math.min(dailyForecasts[dateKey].min, item.main.temp_min);
+                dailyForecasts[dateKey].max = Math.max(dailyForecasts[dateKey].max, item.main.temp_max);
+            });
+            
+            Object.values(dailyForecasts).slice(0, 5).forEach(dayData => {
+                const forecastItem = document.createElement('div');
+                forecastItem.classList.add('forecast-item');
+                
+                const iconUrl = `https://openweathermap.org/img/wn/${dayData.iconCode}@2x.png`;
+                
+                forecastItem.innerHTML = `
+                    <div class="forecast-day">${dayData.day}</div>
+                    <img src="${iconUrl}" alt="${dayData.desc}">
+                    <div class="forecast-details">
+                        <span class="forecast-temp">HIGH: ${Math.round(dayData.max)}°C</span>
+                        <span class="forecast-temp">LOW: ${Math.round(dayData.min)}°C</span>
+                    </div>
+                    <div>${dayData.desc.toUpperCase()}</div>
+                `;
+                forecastContainer.appendChild(forecastItem);
+            });
+        }
+        
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('en-US', dateOptions).toUpperCase();
+
+            timeEl.textContent = timeString;
+            dateEl.textContent = dateString;
+        }
+
+        function updateWindGauge(windSpeed) {
+            const maxSpeed = 30; // Max speed for a calm-to-strong gauge, km/h
+            const windSpeedKmh = windSpeed * 3.6;
+            const percentage = Math.min(windSpeedKmh / maxSpeed, 1);
+            const rotation = percentage * 270 - 45; // Rotate from -45 to 225 degrees
+            
+            windNeedle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
+            
+            if (windSpeedKmh < 10) {
+                windValueDisplay.textContent = 'LIGHT BREEZE';
+            } else if (windSpeedKmh < 20) {
+                windValueDisplay.textContent = 'MODERATE WIND';
+            } else {
+                windValueDisplay.textContent = 'STRONG WIND';
+            }
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // Load default weather data on page load
+        window.onload = () => {
+          getWeatherData('New York');
+        };
+    </script>
+</body>
+</html>
 
