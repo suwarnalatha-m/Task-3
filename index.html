@@ -507,7 +507,7 @@
         <div class="card gemini-card">
             <h3>WEATHER INSIGHTS</h3>
             <button id="generate-advice-button" disabled>GENERATE INSIGHTS ✨</button>
-            <div id="gemini-output">
+            <div id="output">
                 SEARCH FOR A CITY TO GET WEATHER INSIGHTS.
             </div>
         </div>
@@ -515,12 +515,11 @@
     </div>
     
     <script>
-        // Replace 'YOUR_API_KEY' with your actual OpenWeatherMap API key
         const API_KEY = 'c1a88ee6c38ec544c180e86cac271bc6';
         
-        // Gemini API Key (leave this as an empty string)
+  
         const GEMINI_API_KEY = "";
-        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + GEMINI_API_KEY;
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=8d6cf055bfd39fb9d8fdf560eeb14be3" + GEMINI_API_KEY;
 
         const cityInput = document.getElementById('city-input');
         const searchButton = document.getElementById('search-button');
@@ -548,8 +547,8 @@
                 getWeatherData(city);
             } else {
                 // Use a modal-like UI instead of alert()
-                geminiOutputEl.textContent = 'PLEASE ENTER A CITY NAME.';
-                geminiOutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
+                OutputEl.textContent = 'PLEASE ENTER A CITY NAME.';
+                OutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
             }
         });
 
@@ -590,21 +589,21 @@
                 
                 // Enable the Gemini advice button once data is loaded
                 generateAdviceButton.disabled = false;
-                geminiOutputEl.textContent = 'CLICK THE BUTTON TO GET WEATHER INSIGHTS.';
+                OutputEl.textContent = 'CLICK THE BUTTON TO GET WEATHER INSIGHTS.';
 
             } catch (error) {
                 console.error('Error fetching weather data:', error);
                 // Use a modal-like UI instead of alert()
-                geminiOutputEl.textContent = error.message;
-                geminiOutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
+                OutputEl.textContent = error.message;
+                OutputEl.style.backgroundColor = 'rgba(255, 50, 50, 0.5)';
                 generateAdviceButton.disabled = true;
-                geminiOutputEl.textContent = 'COULD NOT GET WEATHER INSIGHTS.';
+                OutputEl.textContent = 'COULD NOT GET WEATHER INSIGHTS.';
             }
         }
         
         async function getGeminiAdvice(weatherData, forecastData) {
-            geminiOutputEl.textContent = 'GENERATING INSIGHTS...';
-            geminiOutputEl.style.backgroundColor = '';
+            OutputEl.textContent = 'GENERATING INSIGHTS...';
+            OutputEl.style.backgroundColor = '';
             generateAdviceButton.disabled = true;
 
             const city = weatherData.name;
@@ -644,7 +643,7 @@
             };
 
             try {
-                const response = await fetch(GEMINI_API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -658,14 +657,14 @@
                 const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
                 
                 if (generatedText) {
-                    geminiOutputEl.textContent = generatedText.toUpperCase();
+                    OutputEl.textContent = generatedText.toUpperCase();
                 } else {
-                    geminiOutputEl.textContent = 'FAILED TO GENERATE INSIGHTS. PLEASE TRY AGAIN.';
+                    OutputEl.textContent = 'FAILED TO GENERATE INSIGHTS. PLEASE TRY AGAIN.';
                 }
 
             } catch (error) {
                 console.error('Error calling Gemini API:', error);
-                geminiOutputEl.textContent = 'ERROR GENERATING INSIGHTS.';
+                OutputEl.textContent = 'ERROR GENERATING INSIGHTS.';
             } finally {
                 generateAdviceButton.disabled = false;
             }
@@ -779,4 +778,3 @@
     </script>
 </body>
 </html>
-
