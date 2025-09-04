@@ -13,3 +13,4 @@ Real-time Clock: Displays the current time and date, with a subtle animation.
 Dynamic Wind Gauge: A visual gauge and text description show the current wind speed.
 
 AI-Powered Insights: Click the "GENERATE INSIGHTS" button to get a custom, stylized weather summary and activity suggestions, created by a Gemini AI model.
+[Preview]()
